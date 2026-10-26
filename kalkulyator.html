@@ -1,0 +1,1299 @@
+
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5f6fb">
+<title>Nova Calculator — Smart Calculator</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  color-scheme: light;
+  --bg: #f5f6fb;
+  --surface: #ffffff;
+  --surface-2: #f1f2f8;
+  --text: #202235;
+  --muted: #9295a8;
+  --border: #e9eaf2;
+  --accent: #7667e8;
+  --accent-light: #eeebff;
+  --button: #f5f6fa;
+  --shadow: 0 24px 70px rgba(39, 37, 85, .09);
+  --radius: 25px;
+}
+
+body.dark {
+  color-scheme: dark;
+  --bg: #10111a;
+  --surface: #191b28;
+  --surface-2: #232537;
+  --text: #f3f3fc;
+  --muted: #9295ad;
+  --border: #2b2d40;
+  --accent: #a79aff;
+  --accent-light: #302a4c;
+  --button: #232537;
+  --shadow: 0 24px 70px rgba(0, 0, 0, .24);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  padding: 32px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(ellipse at 8% 8%, rgba(151, 139, 255, .11), transparent 34%),
+    var(--bg);
+  color: var(--text);
+  font-family: "DM Sans", sans-serif;
+  transition: background .25s, color .25s;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+button:active {
+  transform: scale(.95);
+}
+
+.app {
+  width: 100%;
+  max-width: 970px;
+  display: grid;
+  grid-template-columns: minmax(0, 430px) minmax(260px, 1fr);
+  gap: 22px;
+  align-items: stretch;
+}
+
+/* Shared cards */
+
+.calculator,
+.history-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  min-width: 0;
+}
+
+.calculator {
+  padding: 25px;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  background: linear-gradient(140deg, #9c8cff, #7261df);
+  color: white;
+  font-size: 24px;
+  font-weight: 800;
+  box-shadow: 0 7px 18px #7667e82a;
+}
+
+.brand-name {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.7px;
+}
+
+.brand-caption {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  font-weight: 600;
+}
+
+.top-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  background: var(--surface-2);
+  color: var(--muted);
+  transition: .2s;
+}
+
+.icon-btn:hover {
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.icon-btn svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Display */
+
+.display {
+  min-width: 0;
+  min-height: 174px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 18px 5px 24px;
+  overflow: hidden;
+}
+
+.display-label {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 17px;
+}
+
+.expression {
+  width: 100%;
+  min-height: 24px;
+  text-align: right;
+  color: var(--muted);
+  font-size: 16px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.result {
+  width: 100%;
+  margin-top: 7px;
+  text-align: right;
+  font-size: clamp(38px, 6vw, 55px);
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -2.5px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.result.small {
+  font-size: 35px;
+}
+
+.result.error {
+  font-size: 27px;
+  color: #ed6680;
+  letter-spacing: -.5px;
+}
+
+.display-bottom {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.mode-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.mode-dot {
+  width: 6px;
+  height: 6px;
+  background: #52c99a;
+  border-radius: 50%;
+}
+
+.memory-label {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Keypad */
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.key {
+  height: 63px;
+  border-radius: 18px;
+  background: var(--button);
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 600;
+  transition: background .17s, color .17s, transform .12s;
+}
+
+.key:hover {
+  background: var(--surface-2);
+}
+
+.key.utility {
+  background: var(--accent-light);
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.key.operator {
+  background: var(--surface-2);
+  color: var(--accent);
+  font-size: 23px;
+}
+
+.key.equal {
+  color: #fff;
+  background: linear-gradient(145deg, #8979f3, #6c5cda);
+  box-shadow: 0 8px 18px #7667e82b;
+  font-size: 26px;
+}
+
+.key.equal:hover {
+  background: linear-gradient(145deg, #9b8cff, #7b6be8);
+}
+
+.key.zero {
+  grid-column: span 2;
+}
+
+.key:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.calculator-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  margin-top: 23px;
+}
+
+.calculator-footer span {
+  color: var(--accent);
+}
+
+/* History */
+
+.history-card {
+  padding: 27px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.history-title {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -.6px;
+}
+
+.history-subtitle {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.clear-history {
+  padding: 9px 12px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border-radius: 11px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.history-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 23px 0;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  flex: 1;
+}
+
+.history-item {
+  width: 100%;
+  text-align: right;
+  padding: 15px 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 17px;
+  transition: border-color .2s, background .2s;
+  animation: appear .2s ease both;
+}
+
+.history-item:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.history-expression {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.history-result {
+  display: block;
+  margin-top: 7px;
+  color: var(--text);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -.5px;
+  overflow-wrap: anywhere;
+}
+
+.history-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.history-tag {
+  padding: 5px 8px;
+  border-radius: 7px;
+  color: var(--accent);
+  background: var(--accent-light);
+  font-weight: 700;
+}
+
+.empty-history {
+  flex: 1;
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+}
+
+.empty-icon {
+  width: 66px;
+  height: 66px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 17px;
+  border-radius: 22px;
+  background: var(--surface-2);
+  color: var(--accent);
+  font-size: 28px;
+}
+
+.empty-history strong {
+  color: var(--text);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.empty-history p {
+  font-size: 12px;
+  line-height: 1.7;
+  max-width: 200px;
+}
+
+.history-footer {
+  border-top: 1px solid var(--border);
+  margin-top: 20px;
+  padding-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.history-footer strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translate(-50%, 20px);
+  padding: 12px 18px;
+  border-radius: 13px;
+  background: var(--text);
+  color: var(--surface);
+  font-size: 13px;
+  opacity: 0;
+  pointer-events: none;
+  transition: .2s;
+  z-index: 10;
+  max-width: calc(100vw - 32px);
+  text-align: center;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@keyframes appear {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (min-width: 700px) {
+  .history-card {
+    max-height: 690px;
+  }
+
+  .history-list {
+    overflow-y: auto;
+    min-height: 0;
+    padding-right: 3px;
+  }
+}
+
+@media (max-width: 699px) {
+  body {
+    padding: 18px 12px;
+    align-items: flex-start;
+  }
+
+  .app {
+    max-width: 430px;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .calculator {
+    padding: 19px;
+  }
+
+  .topbar {
+    margin-bottom: 15px;
+  }
+
+  .display {
+    min-height: 155px;
+    padding-bottom: 18px;
+  }
+
+  .keypad {
+    gap: 9px;
+  }
+
+  .key {
+    height: clamp(54px, 14vw, 65px);
+    border-radius: 16px;
+  }
+
+  .history-card {
+    padding: 21px;
+  }
+
+  .empty-history {
+    min-height: 150px;
+  }
+
+  .history-list {
+    max-height: 420px;
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 360px) {
+  .calculator {
+    padding: 15px;
+  }
+
+  .brand-name {
+    font-size: 15px;
+  }
+
+  .logo {
+    width: 39px;
+    height: 39px;
+  }
+
+  .top-actions {
+    gap: 5px;
+  }
+
+  .icon-btn {
+    width: 35px;
+    height: 35px;
+  }
+
+  .keypad {
+    gap: 7px;
+  }
+
+  .key {
+    height: 52px;
+    border-radius: 13px;
+    font-size: 18px;
+  }
+
+  .result {
+    font-size: 39px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<main class="app">
+
+  <!-- CALCULATOR -->
+  <section class="calculator">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">N</div>
+        <div>
+          <div class="brand-name">Nova Calculator</div>
+          <div class="brand-caption">SMART · SIMPLE · FAST</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="icon-btn" id="soundToggle"
+          aria-label="Ovozli effektlarni yoqish yoki o‘chirish"
+          title="Ovozli effektlar">
+          <svg id="soundIcon" viewBox="0 0 24 24">
+            <path d="M11 5 6 9H3v6h3l5 4z"/>
+            <path d="M15 9a5 5 0 0 1 0 6"/>
+            <path d="M18 6a9 9 0 0 1 0 12"/>
+          </svg>
+        </button>
+
+        <button class="icon-btn" id="themeToggle"
+          aria-label="Rang rejimini almashtirish"
+          title="Dark / Light">
+          <svg id="themeIcon" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="display" aria-live="polite" aria-atomic="true">
+      <div class="display-label" id="displayLabel">Your calculation</div>
+      <div class="expression" id="expression">Ready to calculate</div>
+      <div class="result" id="result">0</div>
+
+      <div class="display-bottom">
+        <span class="mode-label">
+          <span class="mode-dot"></span>
+          Calculator ready
+        </span>
+        <span class="memory-label" id="memoryLabel"></span>
+      </div>
+    </section>
+
+    <div class="keypad" id="keypad">
+      <button class="key utility" data-action="clear">AC</button>
+      <button class="key utility" data-action="sign">+/−</button>
+      <button class="key utility" data-action="percent">%</button>
+      <button class="key operator" data-op="÷" aria-label="Bo‘lish">÷</button>
+
+      <button class="key" data-num="7">7</button>
+      <button class="key" data-num="8">8</button>
+      <button class="key" data-num="9">9</button>
+      <button class="key operator" data-op="×" aria-label="Ko‘paytirish">×</button>
+
+      <button class="key" data-num="4">4</button>
+      <button class="key" data-num="5">5</button>
+      <button class="key" data-num="6">6</button>
+      <button class="key operator" data-op="−" aria-label="Ayirish">−</button>
+
+      <button class="key" data-num="1">1</button>
+      <button class="key" data-num="2">2</button>
+      <button class="key" data-num="3">3</button>
+      <button class="key operator" data-op="+" aria-label="Qo‘shish">+</button>
+
+      <button class="key utility" data-action="delete" aria-label="Oxirgi raqamni o‘chirish">⌫</button>
+      <button class="key zero" data-num="0">0</button>
+      <button class="key" data-action="decimal">.</button>
+      <button class="key equal" data-action="equals" aria-label="Natijani hisoblash">=</button>
+    </div>
+
+    <footer class="calculator-footer">
+      <span>✦</span> MADE FOR EVERYDAY MATH
+    </footer>
+  </section>
+
+  <!-- HISTORY -->
+  <aside class="history-card">
+    <header class="history-header">
+      <div>
+        <h2 class="history-title">History</h2>
+        <p class="history-subtitle">Your recent calculations</p>
+      </div>
+      <button class="clear-history" id="clearHistory">Clear all</button>
+    </header>
+
+    <div class="history-divider"></div>
+
+    <div class="history-list" id="historyList"></div>
+
+    <footer class="history-footer">
+      <span>Total calculations</span>
+      <strong id="historyCount">0</strong>
+    </footer>
+  </aside>
+
+</main>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  const resultEl = $("result");
+  const expressionEl = $("expression");
+  const displayLabel = $("displayLabel");
+  const memoryLabel = $("memoryLabel");
+  const historyList = $("historyList");
+  const historyCount = $("historyCount");
+  const toastEl = $("toast");
+
+  const STORE_HISTORY = "nova-calculator-history-v1";
+  const STORE_THEME = "nova-calculator-theme-v1";
+  const STORE_SOUND = "nova-calculator-sound-v1";
+
+  let current = "0";
+  let stored = null;
+  let operator = null;
+  let fresh = false;
+  let error = false;
+  let lastExpression = "";
+  let lastResult = null;
+  let history = [];
+  let soundEnabled = true;
+  let audioContext = null;
+  let toastTimer = null;
+
+  // Safe storage helpers
+  function readStorage(key, fallback) {
+    try {
+      const value = localStorage.getItem(key);
+      return value === null ? fallback : value;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function writeStorage(key, value) {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      // The app still works when browser storage is unavailable.
+    }
+  }
+
+  function removeStorage(key) {
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+  }
+
+  // Sound effects: generated locally with Web Audio.
+  function playSound(type = "tap") {
+    if (!soundEnabled) return;
+
+    try {
+      const Audio = window.AudioContext || window.webkitAudioContext;
+      if (!Audio) return;
+
+      if (!audioContext) audioContext = new Audio();
+      if (audioContext.state === "suspended") {
+        audioContext.resume().catch(() => {});
+      }
+
+      const ctx = audioContext;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
+
+      const frequencies = {
+        tap: 520,
+        operator: 660,
+        equal: 790,
+        clear: 340,
+        error: 190
+      };
+
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(frequencies[type] || 520, now);
+      osc.frequency.exponentialRampToValueAtTime(
+        (frequencies[type] || 520) * 0.82,
+        now + 0.055
+      );
+
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.055, now + 0.008);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.075);
+    } catch {
+      // Sound is optional; calculations never depend on it.
+    }
+  }
+
+  function showToast(message) {
+    toastEl.textContent = message;
+    toastEl.classList.add("show");
+
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toastEl.classList.remove("show");
+    }, 1900);
+  }
+
+  // Theme
+  function applyTheme(theme) {
+    document.body.classList.toggle("dark", theme === "dark");
+
+    $("themeIcon").innerHTML = theme === "dark"
+      ? '<path d="M20.5 14A8.5 8.5 0 0 1 10 3.5 8.5 8.5 0 1 0 20.5 14Z"/>'
+      : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>';
+
+    document.querySelector('meta[name="theme-color"]')
+      .setAttribute("content", theme === "dark" ? "#10111a" : "#f5f6fb");
+
+    writeStorage(STORE_THEME, theme);
+  }
+
+  const savedTheme = readStorage(
+    STORE_THEME,
+    matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+  );
+
+  applyTheme(savedTheme);
+
+  $("themeToggle").addEventListener("click", () => {
+    playSound("tap");
+    applyTheme(document.body.classList.contains("dark") ? "light" : "dark");
+  });
+
+  function updateSoundButton() {
+    $("soundIcon").innerHTML = soundEnabled
+      ? '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15 9a5 5 0 0 1 0 6"/><path d="M18 6a9 9 0 0 1 0 12"/>'
+      : '<path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6m0-6-5 6"/>';
+
+    $("soundToggle").style.color = soundEnabled ? "var(--accent)" : "var(--muted)";
+    $("soundToggle").title = soundEnabled ? "Ovozni o‘chirish" : "Ovozni yoqish";
+  }
+
+  soundEnabled = readStorage(STORE_SOUND, "true") !== "false";
+  updateSoundButton();
+
+  $("soundToggle").addEventListener("click", () => {
+    soundEnabled = !soundEnabled;
+    writeStorage(STORE_SOUND, String(soundEnabled));
+    updateSoundButton();
+
+    if (soundEnabled) playSound("tap");
+    showToast(soundEnabled ? "Sound effects enabled" : "Sound effects disabled");
+  });
+
+  // Display and number formatting
+  function formatNumber(n) {
+    if (!Number.isFinite(n)) throw new Error("Natija hisoblab bo‘lmadi");
+
+    if (Object.is(n, -0)) n = 0;
+
+    return String(Number(n.toPrecision(12)));
+  }
+
+  function prettyNumber(value) {
+    if (value === "Xato") return value;
+
+    const s = String(value);
+    const parts = s.split(".");
+    const integer = parts[0];
+    const negative = integer.startsWith("-");
+    const digits = negative ? integer.slice(1) : integer;
+
+    const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+    return (negative ? "-" : "") +
+      grouped +
+      (parts.length > 1 ? "." + parts.slice(1).join(".") : "");
+  }
+
+  function render() {
+    resultEl.textContent = prettyNumber(current);
+    resultEl.classList.toggle("error", error);
+    resultEl.classList.toggle("small", current.length > 11);
+
+    memoryLabel.textContent = stored !== null ? "M: " + prettyNumber(formatNumber(stored)) : "";
+  }
+
+  function resetAll() {
+    current = "0";
+    stored = null;
+    operator = null;
+    fresh = false;
+    error = false;
+    lastExpression = "";
+    lastResult = null;
+
+    expressionEl.textContent = "Ready to calculate";
+    displayLabel.textContent = "Your calculation";
+    render();
+  }
+
+  function ensureReady() {
+    if (error) resetAll();
+  }
+
+  function addNumber(n) {
+    ensureReady();
+
+    if (fresh) {
+      current = n;
+      fresh = false;
+      lastResult = null;
+    } else if (current === "0") {
+      current = n;
+    } else if (current === "-0") {
+      current = "-" + n;
+    } else if (current.replace("-", "").replace(".", "").length < 15) {
+      current += n;
+    } else {
+      return;
+    }
+
+    displayLabel.textContent = "Your calculation";
+    render();
+  }
+
+  function addDecimal() {
+    ensureReady();
+
+    if (fresh) {
+      current = "0.";
+      fresh = false;
+      lastResult = null;
+    } else if (!current.includes(".")) {
+      current += ".";
+    }
+
+    render();
+  }
+
+  function applyOperator(a, b, op) {
+    switch (op) {
+      case "+": return a + b;
+      case "−": return a - b;
+      case "×": return a * b;
+      case "÷":
+        if (b === 0) throw new Error("Nolga bo‘lish mumkin emas");
+        return a / b;
+      default: return b;
+    }
+  }
+
+  function chooseOperator(op) {
+    ensureReady();
+
+    if (operator && !fresh) {
+      try {
+        current = formatNumber(
+          applyOperator(stored, Number(current), operator)
+        );
+      } catch (e) {
+        showError(e.message);
+        return;
+      }
+    }
+
+    stored = Number(current);
+    operator = op;
+    fresh = true;
+    lastResult = null;
+
+    expressionEl.textContent = prettyNumber(current) + " " + op;
+    displayLabel.textContent = "Calculation in progress";
+    render();
+  }
+
+  function showError(message) {
+    current = "Xato";
+    error = true;
+    fresh = true;
+    expressionEl.textContent = message;
+    displayLabel.textContent = "Something went wrong";
+    playSound("error");
+    render();
+  }
+
+  function addHistory(expression, result) {
+    const item = {
+      id: Date.now() + "-" + Math.random().toString(36).slice(2, 8),
+      expression,
+      result,
+      time: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit"
+      })
+    };
+
+    history.unshift(item);
+    history = history.slice(0, 50);
+
+    writeStorage(STORE_HISTORY, JSON.stringify(history));
+    renderHistory();
+  }
+
+  function equals() {
+    if (error || operator === null || stored === null || fresh) return;
+
+    const a = stored;
+    const b = Number(current);
+    const op = operator;
+    const expression = prettyNumber(formatNumber(a)) + " " + op + " " +
+      prettyNumber(formatNumber(b));
+
+    try {
+      const value = applyOperator(a, b, op);
+      const answer = formatNumber(value);
+
+      addHistory(expression, answer);
+
+      current = answer;
+      lastExpression = expression;
+      lastResult = answer;
+
+      expressionEl.textContent = expression + " =";
+      displayLabel.textContent = "Your result";
+
+      stored = null;
+      operator = null;
+      fresh = true;
+      error = false;
+
+      playSound("equal");
+      render();
+    } catch (e) {
+      showError(e.message);
+    }
+  }
+
+  function clearEntry() {
+    ensureReady();
+    current = "0";
+    fresh = false;
+    render();
+  }
+
+  function deleteLast() {
+    if (error || fresh) {
+      current = "0";
+      error = false;
+      fresh = false;
+    } else {
+      current = current.slice(0, -1);
+
+      if (current === "" || current === "-") current = "0";
+    }
+
+    render();
+  }
+
+  function changeSign() {
+    ensureReady();
+
+    if (current === "0") return;
+
+    current = current.startsWith("-")
+      ? current.slice(1)
+      : "-" + current;
+
+    fresh = false;
+    render();
+  }
+
+  function percent() {
+    ensureReady();
+
+    try {
+      current = formatNumber(Number(current) / 100);
+      fresh = false;
+      render();
+    } catch (e) {
+      showError(e.message);
+    }
+  }
+
+  // Event delegation for keypad
+  $("keypad").addEventListener("click", event => {
+    const btn = event.target.closest("button");
+    if (!btn) return;
+
+    if (btn.dataset.action === "clear") {
+      playSound("clear");
+      resetAll();
+      return;
+    }
+
+    if (btn.dataset.num !== undefined) {
+      playSound("tap");
+      addNumber(btn.dataset.num);
+      return;
+    }
+
+    if (btn.dataset.op) {
+      playSound("operator");
+      chooseOperator(btn.dataset.op);
+      return;
+    }
+
+    switch (btn.dataset.action) {
+      case "decimal":
+        playSound("tap");
+        addDecimal();
+        break;
+
+      case "delete":
+        playSound("tap");
+        deleteLast();
+        break;
+
+      case "sign":
+        playSound("tap");
+        changeSign();
+        break;
+
+      case "percent":
+        playSound("tap");
+        percent();
+        break;
+
+      case "equals":
+        equals();
+        break;
+    }
+  });
+
+  // Keyboard support
+  document.addEventListener("keydown", event => {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+
+    const key = event.key;
+
+    if (/^[0-9]$/.test(key)) {
+      playSound("tap");
+      addNumber(key);
+    } else if (key === ".") {
+      playSound("tap");
+      addDecimal();
+    } else if (["+", "-", "*", "/"].includes(key)) {
+      event.preventDefault();
+      const map = { "+": "+", "-": "−", "*": "×", "/": "÷" };
+      playSound("operator");
+      chooseOperator(map[key]);
+    } else if (key === "Enter" || key === "=") {
+      event.preventDefault();
+      equals();
+    } else if (key === "Backspace") {
+      playSound("tap");
+      deleteLast();
+    } else if (key === "Escape") {
+      playSound("clear");
+      resetAll();
+    } else if (key === "%") {
+      playSound("tap");
+      percent();
+    }
+  });
+
+  // History panel
+  function renderHistory() {
+    historyList.replaceChildren();
+    historyCount.textContent = history.length;
+
+    if (!history.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty-history";
+
+      const icon = document.createElement("div");
+      icon.className = "empty-icon";
+      icon.textContent = "↗";
+
+      const title = document.createElement("strong");
+      title.textContent = "No calculations yet";
+
+      const description = document.createElement("p");
+      description.textContent =
+        "Your calculations will appear here. Start with your first calculation!";
+
+      empty.append(icon, title, description);
+      historyList.appendChild(empty);
+      return;
+    }
+
+    history.forEach(item => {
+      const button = document.createElement("button");
+      button.className = "history-item";
+      button.type = "button";
+      button.title = "Natijani kalkulyatorga qaytarish";
+
+      const expr = document.createElement("span");
+      expr.className = "history-expression";
+      expr.textContent = item.expression + " =";
+
+      const result = document.createElement("span");
+      result.className = "history-result";
+      result.textContent = prettyNumber(item.result);
+
+      const bottom = document.createElement("span");
+      bottom.className = "history-bottom";
+
+      const tag = document.createElement("span");
+      tag.className = "history-tag";
+      tag.textContent = "Use result";
+
+      const time = document.createElement("span");
+      time.textContent = item.time;
+
+      bottom.append(tag, time);
+      button.append(expr, result, bottom);
+
+      button.addEventListener("click", () => {
+        playSound("tap");
+
+        current = item.result;
+        stored = null;
+        operator = null;
+        fresh = false;
+        error = false;
+        lastResult = null;
+
+        expressionEl.textContent = "Loaded from history";
+        displayLabel.textContent = "Selected result";
+        render();
+
+        showToast("Natija kalkulyatorga yuklandi");
+      });
+
+      historyList.appendChild(button);
+    });
+  }
+
+  $("clearHistory").addEventListener("click", () => {
+    playSound("clear");
+    history = [];
+    removeStorage(STORE_HISTORY);
+    renderHistory();
+    showToast("Hisoblash tarixi tozalandi");
+  });
+
+  // Restore history from browser storage
+  try {
+    const saved = JSON.parse(readStorage(STORE_HISTORY, "[]"));
+
+    if (Array.isArray(saved)) {
+      history = saved.filter(item =>
+        item &&
+        typeof item.expression === "string" &&
+        typeof item.result === "string" &&
+        Number.isFinite(Number(item.result)) &&
+        typeof item.time === "string"
+      ).slice(0, 50);
+    }
+  } catch {
+    history = [];
+  }
+
+  renderHistory();
+  render();
+})();
+</script>
+
+</body>
+</html>
